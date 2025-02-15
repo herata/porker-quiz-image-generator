@@ -64,6 +64,11 @@ def download_irasutoya_cards(url, output_dir="img//cards"):
 
 if __name__ == "__main__":
     marks = ["spade", "heart", "diamond", "club"]
+    
+    # カード画像のダウンロード
     for mark in marks:
         target_url = f"https://www.irasutoya.com/2010/05/numbercard{mark}.html"
+        download_irasutoya_cards(target_url)
+    for mark in marks:
+        target_url = f"https://www.irasutoya.com/2017/05/facecard{mark}.html"
         download_irasutoya_cards(target_url)
