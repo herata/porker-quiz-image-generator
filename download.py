@@ -5,6 +5,7 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import unquote
 
+
 def generate_filename(img_url):
     """
     画像URLから指定形式のファイル名を生成
@@ -12,7 +13,7 @@ def generate_filename(img_url):
     """
     # ファイル名部分を抽出
     original_name = unquote(img_url.split('/')[-1])
-    
+
     # 正規表現でスートと番号を抽出
     match = re.search(r'card_([a-z]+)_(\d+)\.png', original_name, re.IGNORECASE)
     if match:
@@ -20,6 +21,7 @@ def generate_filename(img_url):
         number = match.group(2).zfill(2)  # 01
         return f"{number}_{suit}.png"
     return original_name  # マッチしない場合は元のファイル名
+
 
 def download_irasutoya_cards(url, output_dir="img//cards"):
     os.makedirs(output_dir, exist_ok=True)
@@ -44,7 +46,7 @@ def download_irasutoya_cards(url, output_dir="img//cards"):
         try:
             filename = generate_filename(img_url)
             save_path = os.path.join(output_dir, filename)
-            
+
             # 重複回避処理
             if os.path.exists(save_path):
                 base, ext = os.path.splitext(filename)
@@ -54,7 +56,7 @@ def download_irasutoya_cards(url, output_dir="img//cards"):
             response = requests.get(img_url)
             with open(save_path, 'wb') as f:
                 f.write(response.content)
-            
+
             print(f"ダウンロード成功 ({idx}/{len(image_links)}): {filename}")
             time.sleep(1)
 
@@ -62,9 +64,10 @@ def download_irasutoya_cards(url, output_dir="img//cards"):
             print(f"エラー ({idx}/{len(image_links)}): {str(e)}")
             continue
 
+
 if __name__ == "__main__":
     marks = ["spade", "heart", "diamond", "club"]
-    
+
     # カード画像のダウンロード
     for mark in marks:
         target_url = f"https://www.irasutoya.com/2010/05/numbercard{mark}.html"
