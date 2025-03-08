@@ -268,5 +268,4 @@ if __name__ == "__main__":
 
     # ポーカーテーブル画像を生成
     generator = PokerTableGenerator()
-    # generator.generate_table_image(hero_position, hero_cards, board_cards, villain_positions, pot_size, output_path)
     generator.generate_table_image(game_state, output_path)
