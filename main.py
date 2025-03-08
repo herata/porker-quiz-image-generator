@@ -10,14 +10,27 @@ class PokerTableGenerator:
     CARD_WIDTH = 100
     CARD_HEIGHT = 147
 
+    # ポットサイズの中央座標
+    POT_SIZE_COORDS = (512, 495)
+
     # ポジションの座標マッピング (x, y) - 1024x732のテーブル画像に最適化
     POSITION_COORDS = {
-        'sb': (680, 570),   # スモールブラインド
+        'sb': (690, 570),   # スモールブラインド
         'bb': (340, 570),   # ビッグブラインド
         'utg': (120, 330),  # アンダーザガン
         'hj': (340, 100),   # ハイジャック
-        'co': (680, 100),   # カットオフ
+        'co': (690, 100),   # カットオフ
         'btn': (900, 330)   # ボタン
+    }
+
+    # ベットの座標マッピング
+    BET_COORDS = {
+        'sb': (590, 700),   # スモールブラインド
+        'bb': (435, 700),   # ビッグブラインド
+        'utg': (175, 465),  # アンダーザガン
+        'hj': (435, 230),    # ハイジャック
+        'co': (590, 230),    # カットオフ
+        'btn': (845, 465)   # ボタン
     }
 
     # コミュニティカードのポジション
@@ -131,7 +144,7 @@ class PokerTableGenerator:
                 x, y = self.COMMUNITY_COORDS[i]
                 self.table_img = self.overlay_image(self.table_img, card_img, x, y)
 
-    def place_hero_cards(self, position, hero_cards=None):
+    def place_cards(self, position, hero_cards=None):
         """プレイヤーの手札をポジションに合わせて配置"""
 
         # ポジションの座標を取得
@@ -159,28 +172,100 @@ class PokerTableGenerator:
                 card_img = self.get_card_image(card_code)
                 self.table_img = self.overlay_image(self.table_img, card_img, x, y)
 
-    def generate_table_image(self, hero_position, hero_cards, board_cards, villan_positions, output_path=None):
+    def draw_pot_size(self, pot_size):
+        """ポットサイズを表示"""
+        text = f"{pot_size}"
+        font = cv2.FONT_HERSHEY_COMPLEX
+        font_scale = 1.0
+        thickness = 2
+        color = (255, 255, 255, 255)
+        thickness = 2
+        (text_width, text_height), _ = cv2.getTextSize(text, font, font_scale, thickness)
+
+        x = self.POT_SIZE_COORDS[0] - text_width // 2
+        y = self.POT_SIZE_COORDS[1] + text_height // 2
+
+        org = (x, y)
+        cv2.putText(self.table_img, text, org, font, font_scale, color, thickness, cv2.LINE_AA)
+
+    def draw_bet_size(self, position, bet_size):
+        """ベットサイズを表示"""
+        text = f"{bet_size}"
+        font = cv2.FONT_HERSHEY_COMPLEX
+        font_scale = 1.0
+        thickness = 2
+        color = (255, 255, 255, 255)
+        thickness = 2
+        (text_width, text_height), _ = cv2.getTextSize(text, font, font_scale, thickness)
+
+        x, y = self.BET_COORDS[position.lower()]
+        x -= text_width // 2
+        y += text_height // 2
+
+        org = (x, y)
+        cv2.putText(self.table_img, text, org, font, font_scale, color, thickness, cv2.LINE_AA)
+
+    # def generate_table_image(self, hero_position, hero_cards, board_cards, villan_positions, pot_size, output_path):
+    #     """ポーカーテーブル画像を生成"""
+    #     # テーブル画像をリセット
+    #     self.table_img = self.load_image(self.table_path)
+
+    #     # ボードカードを配置
+    #     self.place_board_cards(board_cards)
+
+    #     # プレイヤーの手札を配置
+    #     self.place_cards(hero_position, hero_cards)
+
+    #     # Villainの手札を配置
+    #     for position in villan_positions:
+    #         self.place_cards(position)
+
+    #     if pot_size:
+    #         # ポットサイズを表示
+    #         self.draw_pot_size(pot_size)
+
+    #     # 画像を保存
+    #     try:
+    #         cv2.imwrite(output_path, self.table_img)
+    #         print(f"画像を保存しました: {output_path}")
+    #     except Exception as e:
+    #         print(f"画像保存エラー: {str(e)}")
+
+    #     return self.table_img
+    def generate_table_image(self, game_state, output_path):
         """ポーカーテーブル画像を生成"""
         # テーブル画像をリセット
         self.table_img = self.load_image(self.table_path)
 
         # ボードカードを配置
-        self.place_board_cards(board_cards)
+        self.place_board_cards(game_state['board'])
 
         # プレイヤーの手札を配置
-        self.place_hero_cards(hero_position, hero_cards)
+        self.place_cards(game_state['hero']['position'], game_state['hero']['cards'])
 
         # Villainの手札を配置
-        for position in villan_positions:
-            self.place_hero_cards(position)
+        for position, villain in game_state['villains'].items():
+            self.place_cards(position)
+
+        # ベットサイズを表示
+        for position, villain in game_state['villains'].items():
+            if villain and 'bet' in villain and villain['bet'] is not None:
+                self.draw_bet_size(position, villain['bet'])
+
+        # ヒーローのベットサイズを表示
+        if 'bet' in game_state['hero'] and game_state['hero']['bet'] is not None:
+            self.draw_bet_size(game_state['hero']['position'], game_state['hero']['bet'])
+
+        # ポットサイズを表示
+        if game_state['pot']:
+            self.draw_pot_size(game_state['pot'])
 
         # 画像を保存
-        if output_path:
-            try:
-                cv2.imwrite(output_path, self.table_img)
-                print(f"画像を保存しました: {output_path}")
-            except Exception as e:
-                print(f"画像保存エラー: {str(e)}")
+        try:
+            cv2.imwrite(output_path, self.table_img)
+            print(f"画像を保存しました: {output_path}")
+        except Exception as e:
+            print(f"画像保存エラー: {str(e)}")
 
         return self.table_img
 
@@ -188,14 +273,32 @@ class PokerTableGenerator:
 # 使用例
 if __name__ == "__main__":
     # 入力パラメータ
-    hero_position = "hj"  # ヒーローのポジション
-    hero_cards = ["As", "Kd"]  # ヒーローの手札
-    board_cards = ["Th", "Jc", "Qd", "9c"]  # ボードのカード
-    villain_positions = ["co", "btn", "bb"]  # 複数のVillainのポジション
+    # hero_position = "btn"  # ヒーローのポジション
+    # hero_cards = ["As", "Kd"]  # ヒーローの手札
+    # board_cards = ["Th", "Jc", "Qd", "9c", "Ac"]  # ボードのカード
+    # villain_positions = ["sb", "bb", "utg", "hj", "co"]  # 複数のVillainのポジション
+    # pot_size = 100  # ポットサイズ
+    game_state = {
+        'hero': {
+            'position': 'btn',
+            'cards': ['As', 'Kd'],
+            'bet': 30
+        },
+        'villains': {
+            'sb': {'bet': 3},
+            'bb': {'bet': 10},
+            'utg': {'bet': 15},
+            'hj': {'bet': 25},
+            'co': None
+        },
+        'board': ['Th', 'Jc', 'Qd', '9c', 'Ac'],
+        'pot': 30
+    }
 
     # 出力ファイルパス
     output_path = "poker_table_output.png"
 
     # ポーカーテーブル画像を生成
     generator = PokerTableGenerator()
-    generator.generate_table_image(hero_position, hero_cards, board_cards, villain_positions, output_path)
+    # generator.generate_table_image(hero_position, hero_cards, board_cards, villain_positions, pot_size, output_path)
+    generator.generate_table_image(game_state, output_path)
