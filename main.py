@@ -205,33 +205,6 @@ class PokerTableGenerator:
         org = (x, y)
         cv2.putText(self.table_img, text, org, font, font_scale, color, thickness, cv2.LINE_AA)
 
-    # def generate_table_image(self, hero_position, hero_cards, board_cards, villan_positions, pot_size, output_path):
-    #     """ポーカーテーブル画像を生成"""
-    #     # テーブル画像をリセット
-    #     self.table_img = self.load_image(self.table_path)
-
-    #     # ボードカードを配置
-    #     self.place_board_cards(board_cards)
-
-    #     # プレイヤーの手札を配置
-    #     self.place_cards(hero_position, hero_cards)
-
-    #     # Villainの手札を配置
-    #     for position in villan_positions:
-    #         self.place_cards(position)
-
-    #     if pot_size:
-    #         # ポットサイズを表示
-    #         self.draw_pot_size(pot_size)
-
-    #     # 画像を保存
-    #     try:
-    #         cv2.imwrite(output_path, self.table_img)
-    #         print(f"画像を保存しました: {output_path}")
-    #     except Exception as e:
-    #         print(f"画像保存エラー: {str(e)}")
-
-    #     return self.table_img
     def generate_table_image(self, game_state, output_path):
         """ポーカーテーブル画像を生成"""
         # テーブル画像をリセット
@@ -273,11 +246,6 @@ class PokerTableGenerator:
 # 使用例
 if __name__ == "__main__":
     # 入力パラメータ
-    # hero_position = "btn"  # ヒーローのポジション
-    # hero_cards = ["As", "Kd"]  # ヒーローの手札
-    # board_cards = ["Th", "Jc", "Qd", "9c", "Ac"]  # ボードのカード
-    # villain_positions = ["sb", "bb", "utg", "hj", "co"]  # 複数のVillainのポジション
-    # pot_size = 100  # ポットサイズ
     game_state = {
         'hero': {
             'position': 'btn',
